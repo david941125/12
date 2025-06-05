@@ -64,3 +64,34 @@ if expenses["records"]:
         st.metric("📊 剩餘預算", f"{remaining:.2f} 元")
 else:
     st.info("尚無任何支出紀錄。")
+# 編輯或刪除紀錄
+st.header("🛠️ 編輯或刪除支出紀錄")
+
+if expenses["records"]:
+    options = [f"{i+1}. {r['date']} - {r['category']} - {r['amount']} 元" for i, r in enumerate(expenses["records"])]
+    selected_index = st.selectbox("選擇一筆紀錄來編輯或刪除", range(len(options)), format_func=lambda x: options[x])
+
+    record = expenses["records"][selected_index]
+
+    st.markdown("### ✏️ 編輯支出")
+    new_date = st.date_input("日期", value=datetime.strptime(record["date"], "%Y-%m-%d"), key="edit_date")
+    new_amount = st.number_input("金額", value=record["amount"], min_value=0.0, key="edit_amount")
+    new_category = st.text_input("類別", value=record["category"], key="edit_category")
+    new_note = st.text_input("備註", value=record["note"], key="edit_note")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("儲存修改"):
+            record.update({
+                "date": str(new_date),
+                "amount": new_amount,
+                "category": new_category,
+                "note": new_note
+            })
+            save_data(expenses, EXPENSES_FILE)
+            st.success("紀錄已更新！")
+    with col2:
+        if st.button("刪除這筆紀錄"):
+            expenses["records"].pop(selected_index)
+            save_data(expenses, EXPENSES_FILE)
+            st.warning("紀錄已刪除！")
